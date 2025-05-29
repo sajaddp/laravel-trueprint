@@ -38,12 +38,7 @@ export function parseDraft(): ModelDefinition[] {
             name: field.name,
             type: field.type as FieldType,
             nullable: (field.nullable as boolean) ?? false,
-            default: field.default as
-              | string
-              | number
-              | boolean
-              | null
-              | undefined,
+            default: field.default,
             length: field.length as number | undefined,
             fixed: field.fixed as boolean | undefined,
             total: field.total as number | undefined,
@@ -53,6 +48,21 @@ export function parseDraft(): ModelDefinition[] {
             dimensions: field.dimensions as number | undefined,
             subtype: field.subtype as string | undefined,
             srid: field.srid as number | undefined,
+
+            // Modifiers
+            unsigned: field.unsigned as boolean | undefined,
+            comment: field.comment as string | undefined,
+            charset: field.charset as string | undefined,
+            collation: field.collation as string | undefined,
+            autoIncrement: field.autoIncrement as boolean | undefined,
+            first: field.first as boolean | undefined,
+            after: field.after as string | undefined,
+            useCurrent: field.useCurrent as boolean | undefined,
+            useCurrentOnUpdate: field.useCurrentOnUpdate as boolean | undefined,
+            storedAs: field.storedAs as string | undefined,
+            virtualAs: field.virtualAs as string | undefined,
+            invisible: field.invisible as boolean | undefined,
+            from: field.from as number | undefined,
           };
         },
       );
