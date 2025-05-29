@@ -1,8 +1,14 @@
 import { parseDraft } from "./parser/draft-parser";
-import { generateMigration } from "./generator/migration";
+import { generateMigration } from "./generator/generateMigration";
 
-const models = parseDraft();
+function main(): void {
+  const models = parseDraft();
 
-for (const model of models) {
-  generateMigration(model);
+  models.forEach((model) => {
+    generateMigration(model);
+  });
+
+  console.log(`\n🎉 Done generating ${models.length} migration(s).`);
 }
+
+main();
