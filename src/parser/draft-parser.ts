@@ -38,7 +38,13 @@ export function parseDraft(): ModelDefinition[] {
             name: field.name,
             type: field.type as FieldType,
             nullable: (field.nullable as boolean) ?? false,
-            default: field.default,
+            default:
+              typeof field.default === "string" ||
+              typeof field.default === "number" ||
+              typeof field.default === "boolean" ||
+              field.default === null
+                ? field.default
+                : undefined,
             length: field.length as number | undefined,
             fixed: field.fixed as boolean | undefined,
             total: field.total as number | undefined,
@@ -74,6 +80,7 @@ export function parseDraft(): ModelDefinition[] {
         charset: model.charset as string | undefined,
         collation: model.collation as string | undefined,
         comment: model.comment as string | undefined,
+        timestamps: model.timestamps !== false,
         fields,
       };
     },
