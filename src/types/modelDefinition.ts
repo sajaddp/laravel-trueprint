@@ -1,4 +1,4 @@
-import { Field } from "./fieldType";
+import { Field } from "./Field";
 
 export interface ModelDefinition {
   name: string;

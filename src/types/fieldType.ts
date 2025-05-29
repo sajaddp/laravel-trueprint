@@ -59,29 +59,3 @@ export type FieldType =
   | "ipAddress"
   | "rememberToken"
   | "vector";
-
-export interface Field {
-  name: string;
-  type: FieldType;
-  nullable?: boolean;
-  default?: string | number | boolean | null;
-
-  // for string, char, binary
-  length?: number;
-  fixed?: boolean;
-
-  // for decimal
-  total?: number;
-  places?: number;
-
-  // for enum and set
-  enum?: string[];
-  set?: string[];
-
-  // for vector
-  dimensions?: number;
-
-  // for geometry/geography
-  subtype?: string;
-  srid?: number;
-}
