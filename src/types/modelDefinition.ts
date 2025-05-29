@@ -7,5 +7,6 @@ export interface ModelDefinition {
   charset?: string;
   collation?: string;
   comment?: string;
+  timestamps?: boolean;
   fields: Field[];
 }
