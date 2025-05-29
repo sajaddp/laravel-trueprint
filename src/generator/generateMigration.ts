@@ -19,7 +19,9 @@ function generateColumn(field: Field): string {
   const name = `'${field.name}'`;
   const args: string[] = [];
 
-  // نوع‌های خاص با آرگومان‌های متفاوت
+  // ------------------------------
+  // Base arguments for the column
+  // ------------------------------
   switch (field.type) {
     case "string":
     case "char":
@@ -39,18 +41,15 @@ function generateColumn(field: Field): string {
     case "enum":
     case "set":
       args.push(name);
-      if (field.enum?.length) {
-        args.push(JSON.stringify(field.enum));
-      } else if (field.set?.length) {
-        args.push(JSON.stringify(field.set));
-      } else {
+      const values = field.enum ?? field.set;
+      if (!values)
         throw new Error(`Missing values for enum/set field '${field.name}'`);
-      }
+      args.push(JSON.stringify(values));
       break;
     case "vector":
       args.push(name);
       if (field.dimensions === undefined)
-        throw new Error(`Missing dimensions for vector field '${field.name}'`);
+        throw new Error(`Missing dimensions for vector '${field.name}'`);
       args.push(`dimensions: ${field.dimensions}`);
       break;
     case "geometry":
@@ -65,12 +64,28 @@ function generateColumn(field: Field): string {
 
   let column = `$table->${field.type}(${args.join(", ")})`;
 
+  // -------------------------
+  // Apply modifiers
+  // -------------------------
+  if (field.unsigned) column += "->unsigned()";
   if (field.nullable) column += "->nullable()";
+  if (field.autoIncrement) column += "->autoIncrement()";
   if (field.default !== undefined) {
     const val =
       typeof field.default === "string" ? `'${field.default}'` : field.default;
     column += `->default(${val})`;
   }
+  if (field.comment) column += `->comment('${field.comment}')`;
+  if (field.charset) column += `->charset('${field.charset}')`;
+  if (field.collation) column += `->collation('${field.collation}')`;
+  if (field.first) column += "->first()";
+  if (field.after) column += `->after('${field.after}')`;
+  if (field.useCurrent) column += "->useCurrent()";
+  if (field.useCurrentOnUpdate) column += "->useCurrentOnUpdate()";
+  if (field.storedAs) column += `->storedAs('${field.storedAs}')`;
+  if (field.virtualAs) column += `->virtualAs('${field.virtualAs}')`;
+  if (field.invisible) column += "->invisible()";
+  if (field.from !== undefined) column += `->from(${field.from})`;
 
   return column + ";";
 }
