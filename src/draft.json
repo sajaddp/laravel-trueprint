@@ -1,21 +1,84 @@
 {
   "models": [
     {
-      "name": "Book",
-      "table": "books",
-      "engine": "InnoDB",
-      "charset": "utf8mb4",
-      "collation": "utf8mb4_unicode_ci",
-      "comment": "Books and their metadata",
+      "name": "User",
+      "table": "users",
+      "timestamps": true,
+      "comment": "Stores user accounts",
       "fields": [
         {
-          "name": "title",
-          "type": "string"
+          "name": "id",
+          "type": "id",
+          "primary": true
         },
         {
-          "name": "published_at",
-          "type": "timestamp",
+          "name": "name",
+          "type": "string",
+          "length": 150,
+          "nullable": false
+        },
+        {
+          "name": "email",
+          "type": "string",
+          "length": 255,
+          "unique": true,
+          "indexName": "unique_email"
+        },
+        {
+          "name": "role",
+          "type": "enum",
+          "enum": ["admin", "teacher", "student"],
+          "default": "student"
+        },
+        {
+          "name": "location",
+          "type": "geometry",
+          "subtype": "point",
+          "srid": 4326,
+          "spatialIndex": true
+        },
+        {
+          "name": "bio",
+          "type": "text",
           "nullable": true
+        },
+        {
+          "name": "active",
+          "type": "boolean",
+          "default": true
+        },
+        {
+          "name": "referrer_id",
+          "type": "foreignId",
+          "nullable": true,
+          "constrained": true,
+          "constrainedTable": "users",
+          "constrainedIndexName": "users_referrer_id_foreign",
+          "onDelete": "set null"
+        }
+      ]
+    },
+    {
+      "name": "Course",
+      "table": "courses",
+      "timestamps": false,
+      "fields": [
+        {
+          "name": "id",
+          "type": "id"
+        },
+        {
+          "name": "title",
+          "type": "string",
+          "length": 200
+        },
+        {
+          "name": "teacher_id",
+          "type": "foreignId",
+          "constrained": true,
+          "constrainedTable": "users",
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         }
       ]
     }
