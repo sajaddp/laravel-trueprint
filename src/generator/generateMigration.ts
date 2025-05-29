@@ -16,57 +16,112 @@ function getTimestamp(): string {
 }
 
 function generateColumn(field: Field): string {
-  const name = `'${field.name}'`;
-  const args: string[] = [];
+  const nameArg = `'${field.name}'`;
 
-  // ------------------------------
-  // Base arguments for the column
-  // ------------------------------
-  switch (field.type) {
-    case "string":
-    case "char":
-      args.push(name);
-      if (field.length) args.push(field.length.toString());
-      break;
-    case "decimal":
-      args.push(name);
-      args.push((field.total ?? 8).toString());
-      args.push((field.places ?? 2).toString());
-      break;
-    case "binary":
-      args.push(name);
-      if (field.length) args.push(`length: ${field.length}`);
-      if (field.fixed) args.push(`fixed: true`);
-      break;
-    case "enum":
-    case "set":
-      args.push(name);
-      const values = field.enum ?? field.set;
-      if (!values)
-        throw new Error(`Missing values for enum/set field '${field.name}'`);
-      args.push(JSON.stringify(values));
-      break;
-    case "vector":
-      args.push(name);
-      if (field.dimensions === undefined)
-        throw new Error(`Missing dimensions for vector '${field.name}'`);
-      args.push(`dimensions: ${field.dimensions}`);
-      break;
-    case "geometry":
-    case "geography":
-      args.push(name);
-      if (field.subtype) args.push(`subtype: '${field.subtype}'`);
-      if (field.srid !== undefined) args.push(`srid: ${field.srid}`);
-      break;
-    default:
-      args.push(name);
-  }
+  // تعریف map برای ساخت آرگومان اولیه بر اساس type
+  const baseArgBuilder: Record<string, (field: Field) => string> = {
+    string: (f) => (f.length ? `${nameArg}, ${f.length}` : `${nameArg}`),
+    char: (f) => (f.length ? `${nameArg}, ${f.length}` : `${nameArg}`),
+    decimal: (f) => `${nameArg}, ${f.total ?? 8}, ${f.places ?? 2}`,
+    binary: (f) => {
+      const parts = [`${nameArg}`];
+      if (f.length) parts.push(`length: ${f.length}`);
+      if (f.fixed) parts.push(`fixed: true`);
+      return parts.join(", ");
+    },
+    enum: (f) => {
+      if (!f.enum) throw new Error(`Missing enum values for field '${f.name}'`);
+      return `${nameArg}, ${JSON.stringify(f.enum)}`;
+    },
+    set: (f) => {
+      if (!f.set) throw new Error(`Missing set values for field '${f.name}'`);
+      return `${nameArg}, ${JSON.stringify(f.set)}`;
+    },
+    vector: (f) => {
+      if (f.dimensions === undefined)
+        throw new Error(`Missing dimensions for vector '${f.name}'`);
+      return `${nameArg}, dimensions: ${f.dimensions}`;
+    },
+    geography: (f) => {
+      const parts = [`${nameArg}`];
+      if (f.subtype) parts.push(`subtype: '${f.subtype}'`);
+      if (f.srid !== undefined) parts.push(`srid: ${f.srid}`);
+      return parts.join(", ");
+    },
+    geometry: (f) => {
+      const parts = [`${nameArg}`];
+      if (f.subtype) parts.push(`subtype: '${f.subtype}'`);
+      if (f.srid !== undefined) parts.push(`srid: ${f.srid}`);
+      return parts.join(", ");
+    },
+  };
 
-  let column = `$table->${field.type}(${args.join(", ")})`;
+  // سایر انواع که فقط name می‌گیرن
+  const simpleTypes = new Set<FieldType>([
+    "boolean",
+    "text",
+    "longText",
+    "mediumText",
+    "tinyText",
+    "bigIncrements",
+    "bigInteger",
+    "double",
+    "float",
+    "id",
+    "increments",
+    "integer",
+    "mediumIncrements",
+    "mediumInteger",
+    "smallIncrements",
+    "smallInteger",
+    "tinyIncrements",
+    "tinyInteger",
+    "unsignedBigInteger",
+    "unsignedInteger",
+    "unsignedMediumInteger",
+    "unsignedSmallInteger",
+    "unsignedTinyInteger",
+    "dateTime",
+    "dateTimeTz",
+    "date",
+    "time",
+    "timeTz",
+    "timestamp",
+    "timestamps",
+    "timestampsTz",
+    "softDeletes",
+    "softDeletesTz",
+    "year",
+    "json",
+    "jsonb",
+    "ulid",
+    "ulidMorphs",
+    "uuid",
+    "uuidMorphs",
+    "nullableUlidMorphs",
+    "nullableUuidMorphs",
+    "foreignId",
+    "foreignIdFor",
+    "foreignUlid",
+    "foreignUuid",
+    "morphs",
+    "nullableMorphs",
+    "macAddress",
+    "ipAddress",
+    "rememberToken",
+  ]);
 
-  // -------------------------
-  // Apply modifiers
-  // -------------------------
+  const args = baseArgBuilder[field.type]
+    ? baseArgBuilder[field.type](field)
+    : simpleTypes.has(field.type)
+      ? nameArg
+      : (() => {
+          throw new Error(`Unsupported field type: ${field.type}`);
+        })();
+
+  let column = `$table->${field.type}(${args})`;
+
+  // ... سایر modifier ها مثل قبل اضافه می‌شن:
   if (field.unsigned) column += "->unsigned()";
   if (field.nullable) column += "->nullable()";
   if (field.autoIncrement) column += "->autoIncrement()";
@@ -86,6 +141,43 @@ function generateColumn(field: Field): string {
   if (field.virtualAs) column += `->virtualAs('${field.virtualAs}')`;
   if (field.invisible) column += "->invisible()";
   if (field.from !== undefined) column += `->from(${field.from})`;
+
+  if (field.primary) column += "->primary()";
+  if (field.unique)
+    column += field.indexName ? `->unique('${field.indexName}')` : "->unique()";
+  if (field.index)
+    column += field.indexName ? `->index('${field.indexName}')` : "->index()";
+  if (field.fullText)
+    column += field.indexName
+      ? `->fullText('${field.indexName}')`
+      : "->fullText()";
+  if (field.spatialIndex)
+    column += field.indexName
+      ? `->spatialIndex('${field.indexName}')`
+      : "->spatialIndex()";
+
+  if (field.constrained) {
+    if (field.constrainedTable && field.constrainedIndexName) {
+      column += `->constrained(table: '${field.constrainedTable}', indexName: '${field.constrainedIndexName}')`;
+    } else if (field.constrainedTable) {
+      column += `->constrained('${field.constrainedTable}')`;
+    } else {
+      column += "->constrained()";
+    }
+  }
+
+  if (field.onDelete) column += `->onDelete('${field.onDelete}')`;
+  if (field.onUpdate) column += `->onUpdate('${field.onUpdate}')`;
+
+  if (field.cascadeOnDelete) column += "->cascadeOnDelete()";
+  if (field.restrictOnDelete) column += "->restrictOnDelete()";
+  if (field.nullOnDelete) column += "->nullOnDelete()";
+  if (field.noActionOnDelete) column += "->noActionOnDelete()";
+
+  if (field.cascadeOnUpdate) column += "->cascadeOnUpdate()";
+  if (field.restrictOnUpdate) column += "->restrictOnUpdate()";
+  if (field.nullOnUpdate) column += "->nullOnUpdate()";
+  if (field.noActionOnUpdate) column += "->noActionOnUpdate()";
 
   return column + ";";
 }
