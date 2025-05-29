@@ -223,6 +223,7 @@ export function generateMigration(model: ModelDefinition): void {
     .replace(/{{table}}/g, model.table)
     .replace(/{{fields}}/g, fieldsCode);
 
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, output);
   console.log(`✅ Migration created: ${fileName}`);
 }
