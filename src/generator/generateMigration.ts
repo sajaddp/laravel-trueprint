@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { ModelDefinition, Field } from "../types";
+import { ModelDefinition, Field, FieldType } from "../types";
 
 function getTimestamp(): string {
   const now = new Date();
@@ -213,6 +213,9 @@ export function generateMigration(model: ModelDefinition): void {
   }
 
   const fieldLines = model.fields.map(generateColumn);
+  if (model.timestamps !== false) {
+    fieldLines.push("$table->timestamps();");
+  }
   const allLines = [...tableOptions, ...fieldLines];
   const fieldsCode = allLines.join("\n            ");
 
