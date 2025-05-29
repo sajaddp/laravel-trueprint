@@ -1,0 +1,33 @@
+{
+  "name": "typescript-template",
+  "version": "1.0.0",
+  "description": "This is a template repository for starting a new TypeScript project.",
+  "main": "index.js",
+  "dependencies": {
+    "dotenv": "^16.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.24",
+    "eslint": "^9.27.0",
+    "prettier": "^3.5.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.33.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node ./src/index.ts",
+    "prettier": "npx prettier --write ./src"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sajaddp/typescript-template.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sajaddp/typescript-template/issues"
+  },
+  "homepage": "https://github.com/sajaddp/typescript-template#readme"
+}
