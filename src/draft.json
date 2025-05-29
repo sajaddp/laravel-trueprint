@@ -3,9 +3,20 @@
     {
       "name": "Book",
       "table": "books",
+      "engine": "InnoDB",
+      "charset": "utf8mb4",
+      "collation": "utf8mb4_unicode_ci",
+      "comment": "Books and their metadata",
       "fields": [
-        { "name": "title", "type": "string" },
-        { "name": "published_at", "type": "timestamp", "nullable": true }
+        {
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "name": "published_at",
+          "type": "timestamp",
+          "nullable": true
+        }
       ]
     }
   ]
