@@ -1,0 +1,12 @@
+{
+  "models": [
+    {
+      "name": "Book",
+      "table": "books",
+      "fields": [
+        { "name": "title", "type": "string" },
+        { "name": "published_at", "type": "timestamp", "nullable": true }
+      ]
+    }
+  ]
+}

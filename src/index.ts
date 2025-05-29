@@ -1,6 +1,8 @@
-import "dotenv/config";
+import { parseDraft } from './parser/draft-parser';
+import { generateMigration } from './generator/migration';
 
-(async () => {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  console.log(process.env.MY_SECRET);
-})();
+const models = parseDraft();
+
+for (const model of models) {
+  generateMigration(model);
+}
