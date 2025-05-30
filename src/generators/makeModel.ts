@@ -28,56 +28,49 @@ const getMorphName = (fieldName: string): string =>
     ? `${fieldName.slice(0, -1)}able`
     : `${fieldName}able`;
 
-function generateRelations(fields: ModelField[]): string {
-  return fields
+const generateRelations = (fields: ModelField[]): string =>
+  fields
     .filter((f) => f.relation && (f.model || f.relation === "morphTo"))
     .map((f) => {
-      let methodBody = "";
-      switch (f.relation) {
-        case "hasOne":
-          methodBody = `return $this->hasOne(${f.model}::class);`;
-          break;
-        case "hasMany":
-          methodBody = `return $this->hasMany(${f.model}::class)->chaperone();`;
-          break;
-        case "belongsToMany":
-          methodBody = `return $this->belongsToMany(${f.model}::class);`;
-          break;
-        case "belongsTo":
-          methodBody = `return $this->belongsTo(${f.model}::class);`;
-          break;
-        case "hasOneThrough":
+      const morphName = getMorphName(f.name);
+      const relationMap: Record<
+        NonNullable<ModelField["relation"]>,
+        () => string
+      > = {
+        hasOne: () => `return $this->hasOne(${f.model}::class);`,
+        hasMany: () => `return $this->hasMany(${f.model}::class)->chaperone();`,
+        belongsToMany: () => `return $this->belongsToMany(${f.model}::class);`,
+        belongsTo: () => `return $this->belongsTo(${f.model}::class);`,
+        hasOneThrough: () => {
           if (!f.through)
             throw new Error(
               `'through' is required for hasOneThrough relation ${f.name}`,
             );
-          methodBody = `return $this->hasOneThrough(${f.model}::class, ${f.through}::class);`;
-          break;
-        case "hasManyThrough":
+          return `return $this->hasOneThrough(${f.model}::class, ${f.through}::class);`;
+        },
+        hasManyThrough: () => {
           if (!f.through)
             throw new Error(
               `'through' is required for hasManyThrough relation ${f.name}`,
             );
-          methodBody = `return $this->hasManyThrough(${f.model}::class, ${f.through}::class);`;
-          break;
-        case "morphTo":
-          methodBody = `return $this->morphTo();`;
-          break;
-        case "morphOne":
-          methodBody = `return $this->morphOne(${f.model}::class, '${getMorphName(f.name)}');`;
-          break;
-        case "morphMany":
-          methodBody = `return $this->morphMany(${f.model}::class, '${getMorphName(f.name)}')->chaperone();`;
-          break;
-        case "morphToMany":
-          methodBody = `return $this->morphToMany(${f.model}::class, '${getMorphName(f.name)}');`;
-          break;
-        case "morphedByMany":
-          methodBody = `return $this->morphedByMany(${f.model}::class, '${getMorphName(f.name)}');`;
-          break;
-        default:
-          methodBody = "// Unknown relation";
-      }
+          return `return $this->hasManyThrough(${f.model}::class, ${f.through}::class);`;
+        },
+        morphTo: () => `return $this->morphTo();`,
+        morphOne: () =>
+          `return $this->morphOne(${f.model}::class, '${morphName}');`,
+        morphMany: () =>
+          `return $this->morphMany(${f.model}::class, '${morphName}')->chaperone();`,
+        morphToMany: () =>
+          `return $this->morphToMany(${f.model}::class, '${morphName}');`,
+        morphedByMany: () =>
+          `return $this->morphedByMany(${f.model}::class, '${morphName}');`,
+      };
+
+      const methodBody =
+        f.relation && f.relation in relationMap
+          ? relationMap[f.relation as keyof typeof relationMap]()
+          : "// Unknown relation";
+
       return `
     public function ${f.name}()
     {
@@ -86,7 +79,6 @@ function generateRelations(fields: ModelField[]): string {
     `;
     })
     .join("\n");
-}
 
 export function makeModels(models: ModelDefinition[]) {
   const modelsDir = path.join(process.cwd(), "app", "Models");
