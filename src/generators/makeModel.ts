@@ -2,39 +2,31 @@ import fs from "fs";
 import path from "path";
 import { ModelDefinition, ModelField } from "../types/model";
 
-function toSnakeCase(str: string): string {
-  return str.replace(/[A-Z]/g, (letter, idx) =>
-    idx === 0 ? letter.toLowerCase() : "_" + letter.toLowerCase(),
-  );
-}
-function pluralize(str: string): string {
-  return str.endsWith("s") ? str : str + "s";
-}
+const toSnakeCase = (str: string): string =>
+  str.replace(/[A-Z]/g, (char, idx) => (idx ? "_" : "") + char.toLowerCase());
 
-function getFillable(fields: ModelField[]): string[] {
-  return fields
+const pluralize = (str: string): string =>
+  str.endsWith("s") ? str : `${str}s`;
+
+const getFillable = (fields: readonly ModelField[]): string[] =>
+  fields
     .filter(
-      (f) =>
-        !f.relation &&
-        f.type !== "softDeletes" &&
-        f.type !== "softDeletesTz" &&
-        f.type !== "uuid" &&
-        f.type !== "ulid",
+      ({ relation, type }) =>
+        !relation &&
+        type !== "softDeletes" &&
+        type !== "softDeletesTz" &&
+        type !== "uuid" &&
+        type !== "ulid",
     )
-    .map((f) => f.name);
-}
+    .map(({ name }) => name);
 
-function usesSoftDeletes(fields: ModelField[]): boolean {
-  return fields.some(
-    (f) => f.type === "softDeletes" || f.type === "softDeletesTz",
-  );
-}
+const usesSoftDeletes = (fields: readonly ModelField[]): boolean =>
+  fields.some(({ type }) => type === "softDeletes" || type === "softDeletesTz");
 
-function getMorphName(fieldName: string): string {
-  return fieldName.endsWith("s")
-    ? fieldName.replace(/s$/, "") + "able"
-    : fieldName + "able";
-}
+const getMorphName = (fieldName: string): string =>
+  fieldName.endsWith("s")
+    ? `${fieldName.slice(0, -1)}able`
+    : `${fieldName}able`;
 
 function generateRelations(fields: ModelField[]): string {
   return fields
