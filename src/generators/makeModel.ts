@@ -1,5 +1,5 @@
-import fs from "fs";
-import path from "path";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import { join, resolve } from "path";
 import { ModelDefinition, ModelField } from "../types/model";
 
 const toSnakeCase = (str: string): string =>
@@ -97,14 +97,14 @@ const renderStub = (
 };
 
 export const makeModels = (models: readonly ModelDefinition[]): void => {
-  const modelsDir = path.resolve(process.cwd(), "app", "Models");
+  const modelsDir = resolve(process.cwd(), "app", "Models");
 
-  if (!fs.existsSync(modelsDir)) {
-    fs.mkdirSync(modelsDir, { recursive: true });
+  if (!existsSync(modelsDir)) {
+    mkdirSync(modelsDir, { recursive: true });
   }
 
-  const stubPath = path.resolve(__dirname, "..", "stubs", "model.stub");
-  const modelStub = fs.readFileSync(stubPath, "utf-8");
+  const stubPath = resolve(__dirname, "..", "stubs", "model.stub");
+  const modelStub = readFileSync(stubPath, "utf-8");
 
   models.forEach((model) => {
     const namespace = "App\\Models";
@@ -226,8 +226,8 @@ export const makeModels = (models: readonly ModelDefinition[]): void => {
 
     const phpContent = renderStub(modelStub, replacements);
 
-    const filePath = path.join(modelsDir, `${model.name}.php`);
-    fs.writeFileSync(filePath, phpContent, "utf-8");
+    const filePath = join(modelsDir, `${model.name}.php`);
+    writeFileSync(filePath, phpContent, "utf-8");
     console.log(`Model created: ${filePath}`);
   });
 };
