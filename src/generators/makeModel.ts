@@ -30,6 +30,12 @@ function usesSoftDeletes(fields: ModelField[]): boolean {
   );
 }
 
+function getMorphName(fieldName: string): string {
+  return fieldName.endsWith("s")
+    ? fieldName.replace(/s$/, "") + "able"
+    : fieldName + "able";
+}
+
 function generateRelations(fields: ModelField[]): string {
   return fields
     .filter((f) => f.relation && f.model)
@@ -61,6 +67,21 @@ function generateRelations(fields: ModelField[]): string {
               `'through' is required for hasManyThrough relation ${f.name}`,
             );
           methodBody = `return $this->hasManyThrough(${f.model}::class, ${f.through}::class);`;
+          break;
+        case "morphTo":
+          methodBody = `return $this->morphTo();`;
+          break;
+        case "morphOne":
+          methodBody = `return $this->morphOne(${f.model}::class, '${getMorphName(f.name)}');`;
+          break;
+        case "morphMany":
+          methodBody = `return $this->morphMany(${f.model}::class, '${getMorphName(f.name)}');`;
+          break;
+        case "morphToMany":
+          methodBody = `return $this->morphToMany(${f.model}::class, '${getMorphName(f.name)}');`;
+          break;
+        case "morphedByMany":
+          methodBody = `return $this->morphedByMany(${f.model}::class, '${getMorphName(f.name)}');`;
           break;
         default:
           methodBody = "// Unknown relation";
