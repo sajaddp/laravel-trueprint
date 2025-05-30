@@ -9,7 +9,7 @@
       "fields": [
         {
           "name": "id",
-          "type": "integer"
+          "type": "uuid"
         },
         {
           "name": "name",
