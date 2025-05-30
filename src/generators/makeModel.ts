@@ -96,14 +96,14 @@ const renderStub = (
   return result.trim() + "\n";
 };
 
-export function makeModels(models: ModelDefinition[]) {
-  const modelsDir = path.join(process.cwd(), "app", "Models");
+export const makeModels = (models: readonly ModelDefinition[]): void => {
+  const modelsDir = path.resolve(process.cwd(), "app", "Models");
 
   if (!fs.existsSync(modelsDir)) {
     fs.mkdirSync(modelsDir, { recursive: true });
   }
 
-  const stubPath = path.join(__dirname, "..", "stubs", "model.stub");
+  const stubPath = path.resolve(__dirname, "..", "stubs", "model.stub");
   const modelStub = fs.readFileSync(stubPath, "utf-8");
 
   models.forEach((model) => {
@@ -116,19 +116,26 @@ export function makeModels(models: ModelDefinition[]) {
 
     const idField = model.fields.find((f) => f.name === "id");
 
-    if (idField?.type === "uuid") {
-      importBlock +=
-        "\nuse Illuminate\\Database\\Eloquent\\Concerns\\HasUuids;";
-      traitBlock += "\n    use HasUuids;";
-    } else if (idField?.type === "ulid") {
-      importBlock +=
-        "\nuse Illuminate\\Database\\Eloquent\\Concerns\\HasUlids;";
-      traitBlock += "\n    use HasUlids;";
+    const matchIdType = {
+      uuid: () => {
+        importBlock +=
+          "\nuse Illuminate\\Database\\Eloquent\\Concerns\\HasUuids;";
+        traitBlock += "\n    use HasUuids;";
+      },
+      ulid: () => {
+        importBlock +=
+          "\nuse Illuminate\\Database\\Eloquent\\Concerns\\HasUlids;";
+        traitBlock += "\n    use HasUlids;";
+      },
+    };
+
+    if (idField?.type && (idField.type === "uuid" || idField.type === "ulid")) {
+      matchIdType[idField.type]();
     }
 
     if (useSoft) {
       importBlock += "\nuse Illuminate\\Database\\Eloquent\\SoftDeletes;";
-      traitBlock = "\n    use SoftDeletes;";
+      traitBlock += "\n    use SoftDeletes;";
     }
 
     if (model.prunable) {
@@ -162,11 +169,14 @@ export function makeModels(models: ModelDefinition[]) {
     const timestampsProp =
       model.timestamps === false ? `\n    public $timestamps = false;` : "";
 
-    let customTimestamps = "";
-    if (model.createdAtColumn)
-      customTimestamps += `\n    const CREATED_AT = '${model.createdAtColumn}';`;
-    if (model.updatedAtColumn)
-      customTimestamps += `\n    const UPDATED_AT = '${model.updatedAtColumn}';`;
+    const customTimestamps = [
+      model.createdAtColumn
+        ? `\n    const CREATED_AT = '${model.createdAtColumn}';`
+        : "",
+      model.updatedAtColumn
+        ? `\n    const UPDATED_AT = '${model.updatedAtColumn}';`
+        : "",
+    ].join("");
 
     const dateFormatProp = model.dateFormat
       ? `\n    protected $dateFormat = '${model.dateFormat}';`
@@ -186,7 +196,7 @@ export function makeModels(models: ModelDefinition[]) {
     if (model.guarded !== undefined) {
       if (Array.isArray(model.guarded)) {
         guardedProp = `\n    protected $guarded = [${model.guarded.map((g) => `'${g}'`).join(", ")}];`;
-      } else if (model.guarded === true || model.guarded === false) {
+      } else if (typeof model.guarded === "boolean") {
         guardedProp = `\n    protected $guarded = [];`;
       }
     } else if (fillable.length) {
@@ -194,6 +204,7 @@ export function makeModels(models: ModelDefinition[]) {
     }
 
     const relationships = generateRelations(model.fields);
+
     const replacements: Record<string, string> = {
       namespace,
       imports: importBlock,
@@ -219,4 +230,4 @@ export function makeModels(models: ModelDefinition[]) {
     fs.writeFileSync(filePath, phpContent, "utf-8");
     console.log(`Model created: ${filePath}`);
   });
-}
+};
