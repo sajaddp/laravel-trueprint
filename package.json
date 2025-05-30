@@ -1,8 +1,8 @@
 {
-  "name": "typescript-template",
-  "version": "1.0.0",
-  "description": "This is a template repository for starting a new TypeScript project.",
-  "main": "index.js",
+  "name": "laravel-trueprint",
+  "version": "0.1.0",
+  "description": "Laravel Truprint - A tool for generating Laravel models and migrations from JSON schema",
+  "main": "src/index.ts",
   "dependencies": {
     "dotenv": "^16.5.0"
   },
@@ -21,13 +21,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sajaddp/typescript-template.git"
+    "url": "git+https://github.com/sajaddp/laravel-trueprint.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/sajaddp/typescript-template/issues"
+    "url": "https://github.com/sajaddp/laravel-trueprint/issues"
   },
-  "homepage": "https://github.com/sajaddp/typescript-template#readme"
+  "homepage": "https://github.com/sajaddp/laravel-trueprint#readme"
 }
