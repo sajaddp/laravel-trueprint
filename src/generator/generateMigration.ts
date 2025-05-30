@@ -18,7 +18,6 @@ function getTimestamp(): string {
 function generateColumn(field: Field): string {
   const nameArg = `'${field.name}'`;
 
-  // تعریف map برای ساخت آرگومان اولیه بر اساس type
   const baseArgBuilder: Record<string, (field: Field) => string> = {
     string: (f) => (f.length ? `${nameArg}, ${f.length}` : `${nameArg}`),
     char: (f) => (f.length ? `${nameArg}, ${f.length}` : `${nameArg}`),
@@ -56,7 +55,6 @@ function generateColumn(field: Field): string {
     },
   };
 
-  // سایر انواع که فقط name می‌گیرن
   const simpleTypes = new Set<FieldType>([
     "boolean",
     "text",
@@ -183,20 +181,6 @@ function generateColumn(field: Field): string {
 }
 
 export function generateMigration(model: ModelDefinition): void {
-  const stubPath = path.join(__dirname, "..", "templates", "migration.stub");
-  const template = fs.readFileSync(stubPath, "utf-8");
-
-  const fileName = `${getTimestamp()}_create_${model.table}_table.php`;
-  const filePath = path.join(
-    __dirname,
-    "..",
-    "..",
-    "laravel",
-    "database",
-    "migrations",
-    fileName,
-  );
-
   const tableOptions: string[] = [];
 
   if (model.engine) {
@@ -219,9 +203,21 @@ export function generateMigration(model: ModelDefinition): void {
   const allLines = [...tableOptions, ...fieldLines];
   const fieldsCode = allLines.join("\n            ");
 
+  const stubPath = path.join(__dirname, "..", "templates", "migration.stub");
+  const template = fs.readFileSync(stubPath, "utf-8");
+
   const output = template
     .replace(/{{table}}/g, model.table)
     .replace(/{{fields}}/g, fieldsCode);
+
+  const fileName = `${getTimestamp()}_create_${model.table}_table.php`;
+  const filePath = path.join(
+    process.cwd(),
+    "laravel",
+    "database",
+    "migrations",
+    fileName,
+  );
 
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, output);
