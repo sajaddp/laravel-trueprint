@@ -46,7 +46,7 @@ function generateRelations(fields: ModelField[]): string {
           methodBody = `return $this->hasOne(${f.model}::class);`;
           break;
         case "hasMany":
-          methodBody = `return $this->hasMany(${f.model}::class);`;
+          methodBody = `return $this->hasMany(${f.model}::class)->chaperone();`;
           break;
         case "belongsToMany":
           methodBody = `return $this->belongsToMany(${f.model}::class);`;
@@ -75,7 +75,7 @@ function generateRelations(fields: ModelField[]): string {
           methodBody = `return $this->morphOne(${f.model}::class, '${getMorphName(f.name)}');`;
           break;
         case "morphMany":
-          methodBody = `return $this->morphMany(${f.model}::class, '${getMorphName(f.name)}');`;
+          methodBody = `return $this->morphMany(${f.model}::class, '${getMorphName(f.name)}')->chaperone();`;
           break;
         case "morphToMany":
           methodBody = `return $this->morphToMany(${f.model}::class, '${getMorphName(f.name)}');`;
