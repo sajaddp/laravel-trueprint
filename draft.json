@@ -1,10 +1,14 @@
 {
+  "config": {
+    "makeModel": true,
+    "makeMigration": true
+  },
   "models": [
     {
       "name": "User",
       "table": "users",
       "timestamps": true,
-      "comment": "Stores user accounts",
+      "comment": "System users",
       "fields": [
         {
           "name": "id",
@@ -14,28 +18,23 @@
         {
           "name": "name",
           "type": "string",
-          "length": 150,
-          "nullable": false
+          "length": 150
         },
         {
           "name": "email",
           "type": "string",
           "length": 255,
-          "unique": true,
-          "indexName": "unique_email"
+          "unique": true
         },
         {
           "name": "role",
           "type": "enum",
-          "enum": ["admin", "teacher", "student"],
+          "enum": [
+            "admin",
+            "teacher",
+            "student"
+          ],
           "default": "student"
-        },
-        {
-          "name": "location",
-          "type": "geometry",
-          "subtype": "point",
-          "srid": 4326,
-          "spatialIndex": true
         },
         {
           "name": "bio",
@@ -53,7 +52,6 @@
           "nullable": true,
           "constrained": true,
           "constrainedTable": "users",
-          "constrainedIndexName": "users_referrer_id_foreign",
           "onDelete": "set null"
         }
       ]
@@ -61,7 +59,7 @@
     {
       "name": "Course",
       "table": "courses",
-      "timestamps": false,
+      "timestamps": true,
       "fields": [
         {
           "name": "id",
@@ -77,8 +75,37 @@
           "type": "foreignId",
           "constrained": true,
           "constrainedTable": "users",
-          "onDelete": "cascade",
-          "onUpdate": "cascade"
+          "onDelete": "cascade"
+        }
+      ]
+    },
+    {
+      "name": "Media",
+      "table": "media",
+      "timestamps": true,
+      "fields": [
+        {
+          "name": "id",
+          "type": "id"
+        },
+        {
+          "name": "file_path",
+          "type": "string",
+          "length": 255
+        },
+        {
+          "name": "mediable_type",
+          "type": "string"
+        },
+        {
+          "name": "mediable_id",
+          "type": "unsignedBigInteger"
+        },
+        {
+          "name": "uploaded_by",
+          "type": "foreignId",
+          "constrained": true,
+          "constrainedTable": "users"
         }
       ]
     }
