@@ -211,13 +211,7 @@ export function generateMigration(model: ModelDefinition): void {
     .replace(/{{fields}}/g, fieldsCode);
 
   const fileName = `${getTimestamp()}_create_${model.table}_table.php`;
-  const filePath = path.join(
-    process.cwd(),
-    "laravel",
-    "database",
-    "migrations",
-    fileName,
-  );
+  const filePath = path.join(process.cwd(), "database", "migrations", fileName);
 
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, output);
