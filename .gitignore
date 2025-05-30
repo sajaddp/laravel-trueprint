@@ -5,3 +5,4 @@ yarn-debug.log*
 dist/
 src/tokens.ts
 pnpm-lock.yaml
+./app
