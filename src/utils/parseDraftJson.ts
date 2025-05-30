@@ -2,7 +2,7 @@ import { readFileSync, existsSync } from "fs";
 import { join } from "path";
 import { DraftJson } from "../types/model";
 
-export function parseDraftJson(): DraftJson {
+export const parseDraftJson = (): DraftJson => {
   const filePath = join(process.cwd(), "draft.json");
 
   if (!existsSync(filePath)) {
@@ -24,12 +24,9 @@ export function parseDraftJson(): DraftJson {
   }
 
   return data;
-}
+};
 
-function isDraftJson(data: unknown): data is DraftJson {
-  return (
-    typeof data === "object" &&
-    data !== null &&
-    Array.isArray((data as DraftJson).models)
-  );
-}
+const isDraftJson = (data: unknown): data is DraftJson =>
+  typeof data === "object" &&
+  data !== null &&
+  Array.isArray((data as DraftJson).models);
