@@ -3,7 +3,13 @@ export interface DraftJsonConfig {
   makeMigration?: boolean;
 }
 
-export type RelationType = "belongsTo" | "hasOne" | "hasMany" | "belongsToMany";
+export type RelationType =
+  | "belongsTo"
+  | "hasOne"
+  | "hasMany"
+  | "belongsToMany"
+  | "hasOneThrough"
+  | "hasManyThrough";
 
 export type FieldType =
   | "string"
@@ -21,13 +27,14 @@ export type FieldType =
 
 export interface ModelField {
   name: string;
-  type?: FieldType;
+  type: FieldType;
   unique?: boolean;
   default?: string | number | boolean | null;
   nullable?: boolean;
   enum?: string[];
   relation?: RelationType;
   model?: string;
+  through?: string;
 }
 
 export interface ModelDefinition {
