@@ -6,106 +6,16 @@
   "models": [
     {
       "name": "User",
-      "table": "users",
-      "timestamps": true,
-      "comment": "System users",
       "fields": [
-        {
-          "name": "id",
-          "type": "id",
-          "primary": true
-        },
-        {
-          "name": "name",
-          "type": "string",
-          "length": 150
-        },
         {
           "name": "email",
           "type": "string",
-          "length": 255,
           "unique": true
         },
         {
-          "name": "role",
-          "type": "enum",
-          "enum": [
-            "admin",
-            "teacher",
-            "student"
-          ],
-          "default": "student"
-        },
-        {
-          "name": "bio",
-          "type": "text",
-          "nullable": true
-        },
-        {
-          "name": "active",
-          "type": "boolean",
-          "default": true
-        },
-        {
-          "name": "referrer_id",
-          "type": "foreignId",
-          "nullable": true,
-          "constrained": true,
-          "constrainedTable": "users",
-          "onDelete": "set null"
-        }
-      ]
-    },
-    {
-      "name": "Course",
-      "table": "courses",
-      "timestamps": true,
-      "fields": [
-        {
-          "name": "id",
-          "type": "id"
-        },
-        {
-          "name": "title",
-          "type": "string",
-          "length": 200
-        },
-        {
-          "name": "teacher_id",
-          "type": "foreignId",
-          "constrained": true,
-          "constrainedTable": "users",
-          "onDelete": "cascade"
-        }
-      ]
-    },
-    {
-      "name": "Media",
-      "table": "media",
-      "timestamps": true,
-      "fields": [
-        {
-          "name": "id",
-          "type": "id"
-        },
-        {
-          "name": "file_path",
-          "type": "string",
-          "length": 255
-        },
-        {
-          "name": "mediable_type",
-          "type": "string"
-        },
-        {
-          "name": "mediable_id",
-          "type": "unsignedBigInteger"
-        },
-        {
-          "name": "uploaded_by",
-          "type": "foreignId",
-          "constrained": true,
-          "constrainedTable": "users"
+          "name": "profile",
+          "relation": "belongsTo",
+          "model": "Profile"
         }
       ]
     }

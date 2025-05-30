@@ -1,0 +1,21 @@
+<?php
+
+namespace {{ namespace }};
+
+{{ imports }}
+{{ comment }}
+class {{ class }} extends Model
+{
+{{ traits }}
+{{ table }}
+{{ primaryKey }}
+{{ incrementing }}
+{{ keyType }}
+{{ timestamps }}
+{{ customTimestamps }}
+{{ dateFormat }}
+{{ connection }}
+{{ fillable }}
+{{ guarded }}
+{{ relationships }}
+}
