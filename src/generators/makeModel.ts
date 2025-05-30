@@ -2,90 +2,75 @@ import fs from "fs";
 import path from "path";
 import { ModelDefinition, ModelField } from "../types/model";
 
-function toSnakeCase(str: string): string {
-  return str.replace(/[A-Z]/g, (letter, idx) =>
-    idx === 0 ? letter.toLowerCase() : "_" + letter.toLowerCase(),
-  );
-}
-function pluralize(str: string): string {
-  return str.endsWith("s") ? str : str + "s";
-}
+const toSnakeCase = (str: string): string =>
+  str.replace(/[A-Z]/g, (char, idx) => (idx ? "_" : "") + char.toLowerCase());
 
-function getFillable(fields: ModelField[]): string[] {
-  return fields
+const pluralize = (str: string): string =>
+  str.endsWith("s") ? str : `${str}s`;
+
+const getFillable = (fields: readonly ModelField[]): string[] =>
+  fields
     .filter(
-      (f) =>
-        !f.relation &&
-        f.type !== "softDeletes" &&
-        f.type !== "softDeletesTz" &&
-        f.type !== "uuid" &&
-        f.type !== "ulid",
+      ({ relation, type }) =>
+        !relation &&
+        type !== "softDeletes" &&
+        type !== "softDeletesTz" &&
+        type !== "uuid" &&
+        type !== "ulid",
     )
-    .map((f) => f.name);
-}
+    .map(({ name }) => name);
 
-function usesSoftDeletes(fields: ModelField[]): boolean {
-  return fields.some(
-    (f) => f.type === "softDeletes" || f.type === "softDeletesTz",
-  );
-}
+const usesSoftDeletes = (fields: readonly ModelField[]): boolean =>
+  fields.some(({ type }) => type === "softDeletes" || type === "softDeletesTz");
 
-function getMorphName(fieldName: string): string {
-  return fieldName.endsWith("s")
-    ? fieldName.replace(/s$/, "") + "able"
-    : fieldName + "able";
-}
+const getMorphName = (fieldName: string): string =>
+  fieldName.endsWith("s")
+    ? `${fieldName.slice(0, -1)}able`
+    : `${fieldName}able`;
 
-function generateRelations(fields: ModelField[]): string {
-  return fields
+const generateRelations = (fields: ModelField[]): string =>
+  fields
     .filter((f) => f.relation && (f.model || f.relation === "morphTo"))
     .map((f) => {
-      let methodBody = "";
-      switch (f.relation) {
-        case "hasOne":
-          methodBody = `return $this->hasOne(${f.model}::class);`;
-          break;
-        case "hasMany":
-          methodBody = `return $this->hasMany(${f.model}::class)->chaperone();`;
-          break;
-        case "belongsToMany":
-          methodBody = `return $this->belongsToMany(${f.model}::class);`;
-          break;
-        case "belongsTo":
-          methodBody = `return $this->belongsTo(${f.model}::class);`;
-          break;
-        case "hasOneThrough":
+      const morphName = getMorphName(f.name);
+      const relationMap: Record<
+        NonNullable<ModelField["relation"]>,
+        () => string
+      > = {
+        hasOne: () => `return $this->hasOne(${f.model}::class);`,
+        hasMany: () => `return $this->hasMany(${f.model}::class)->chaperone();`,
+        belongsToMany: () => `return $this->belongsToMany(${f.model}::class);`,
+        belongsTo: () => `return $this->belongsTo(${f.model}::class);`,
+        hasOneThrough: () => {
           if (!f.through)
             throw new Error(
               `'through' is required for hasOneThrough relation ${f.name}`,
             );
-          methodBody = `return $this->hasOneThrough(${f.model}::class, ${f.through}::class);`;
-          break;
-        case "hasManyThrough":
+          return `return $this->hasOneThrough(${f.model}::class, ${f.through}::class);`;
+        },
+        hasManyThrough: () => {
           if (!f.through)
             throw new Error(
               `'through' is required for hasManyThrough relation ${f.name}`,
             );
-          methodBody = `return $this->hasManyThrough(${f.model}::class, ${f.through}::class);`;
-          break;
-        case "morphTo":
-          methodBody = `return $this->morphTo();`;
-          break;
-        case "morphOne":
-          methodBody = `return $this->morphOne(${f.model}::class, '${getMorphName(f.name)}');`;
-          break;
-        case "morphMany":
-          methodBody = `return $this->morphMany(${f.model}::class, '${getMorphName(f.name)}')->chaperone();`;
-          break;
-        case "morphToMany":
-          methodBody = `return $this->morphToMany(${f.model}::class, '${getMorphName(f.name)}');`;
-          break;
-        case "morphedByMany":
-          methodBody = `return $this->morphedByMany(${f.model}::class, '${getMorphName(f.name)}');`;
-          break;
-        default:
-          methodBody = "// Unknown relation";
-      }
+          return `return $this->hasManyThrough(${f.model}::class, ${f.through}::class);`;
+        },
+        morphTo: () => `return $this->morphTo();`,
+        morphOne: () =>
+          `return $this->morphOne(${f.model}::class, '${morphName}');`,
+        morphMany: () =>
+          `return $this->morphMany(${f.model}::class, '${morphName}')->chaperone();`,
+        morphToMany: () =>
+          `return $this->morphToMany(${f.model}::class, '${morphName}');`,
+        morphedByMany: () =>
+          `return $this->morphedByMany(${f.model}::class, '${morphName}');`,
+      };
+
+      const methodBody =
+        f.relation && f.relation in relationMap
+          ? relationMap[f.relation as keyof typeof relationMap]()
+          : "// Unknown relation";
+
       return `
     public function ${f.name}()
     {
@@ -94,16 +79,31 @@ function generateRelations(fields: ModelField[]): string {
     `;
     })
     .join("\n");
-}
 
-export function makeModels(models: ModelDefinition[]) {
-  const modelsDir = path.join(process.cwd(), "app", "Models");
+const renderStub = (
+  stub: string,
+  replacements: Record<string, string>,
+): string => {
+  let result = stub;
+  for (const [key, value] of Object.entries(replacements)) {
+    result = result.replaceAll(
+      new RegExp(`{{\\s*${key}\\s*}}`, "g"),
+      value ?? "",
+    );
+  }
+
+  result = result.replaceAll(/\n{3,}/g, "\n\n");
+  return result.trim() + "\n";
+};
+
+export const makeModels = (models: readonly ModelDefinition[]): void => {
+  const modelsDir = path.resolve(process.cwd(), "app", "Models");
 
   if (!fs.existsSync(modelsDir)) {
     fs.mkdirSync(modelsDir, { recursive: true });
   }
 
-  const stubPath = path.join(__dirname, "..", "stubs", "model.stub");
+  const stubPath = path.resolve(__dirname, "..", "stubs", "model.stub");
   const modelStub = fs.readFileSync(stubPath, "utf-8");
 
   models.forEach((model) => {
@@ -116,19 +116,26 @@ export function makeModels(models: ModelDefinition[]) {
 
     const idField = model.fields.find((f) => f.name === "id");
 
-    if (idField?.type === "uuid") {
-      importBlock +=
-        "\nuse Illuminate\\Database\\Eloquent\\Concerns\\HasUuids;";
-      traitBlock += "\n    use HasUuids;";
-    } else if (idField?.type === "ulid") {
-      importBlock +=
-        "\nuse Illuminate\\Database\\Eloquent\\Concerns\\HasUlids;";
-      traitBlock += "\n    use HasUlids;";
+    const matchIdType = {
+      uuid: () => {
+        importBlock +=
+          "\nuse Illuminate\\Database\\Eloquent\\Concerns\\HasUuids;";
+        traitBlock += "\n    use HasUuids;";
+      },
+      ulid: () => {
+        importBlock +=
+          "\nuse Illuminate\\Database\\Eloquent\\Concerns\\HasUlids;";
+        traitBlock += "\n    use HasUlids;";
+      },
+    };
+
+    if (idField?.type && (idField.type === "uuid" || idField.type === "ulid")) {
+      matchIdType[idField.type]();
     }
 
     if (useSoft) {
       importBlock += "\nuse Illuminate\\Database\\Eloquent\\SoftDeletes;";
-      traitBlock = "\n    use SoftDeletes;";
+      traitBlock += "\n    use SoftDeletes;";
     }
 
     if (model.prunable) {
@@ -162,11 +169,14 @@ export function makeModels(models: ModelDefinition[]) {
     const timestampsProp =
       model.timestamps === false ? `\n    public $timestamps = false;` : "";
 
-    let customTimestamps = "";
-    if (model.createdAtColumn)
-      customTimestamps += `\n    const CREATED_AT = '${model.createdAtColumn}';`;
-    if (model.updatedAtColumn)
-      customTimestamps += `\n    const UPDATED_AT = '${model.updatedAtColumn}';`;
+    const customTimestamps = [
+      model.createdAtColumn
+        ? `\n    const CREATED_AT = '${model.createdAtColumn}';`
+        : "",
+      model.updatedAtColumn
+        ? `\n    const UPDATED_AT = '${model.updatedAtColumn}';`
+        : "",
+    ].join("");
 
     const dateFormatProp = model.dateFormat
       ? `\n    protected $dateFormat = '${model.dateFormat}';`
@@ -186,7 +196,7 @@ export function makeModels(models: ModelDefinition[]) {
     if (model.guarded !== undefined) {
       if (Array.isArray(model.guarded)) {
         guardedProp = `\n    protected $guarded = [${model.guarded.map((g) => `'${g}'`).join(", ")}];`;
-      } else if (model.guarded === true || model.guarded === false) {
+      } else if (typeof model.guarded === "boolean") {
         guardedProp = `\n    protected $guarded = [];`;
       }
     } else if (fillable.length) {
@@ -194,6 +204,7 @@ export function makeModels(models: ModelDefinition[]) {
     }
 
     const relationships = generateRelations(model.fields);
+
     const replacements: Record<string, string> = {
       namespace,
       imports: importBlock,
@@ -219,17 +230,4 @@ export function makeModels(models: ModelDefinition[]) {
     fs.writeFileSync(filePath, phpContent, "utf-8");
     console.log(`Model created: ${filePath}`);
   });
-}
-
-function renderStub(
-  stub: string,
-  replacements: Record<string, string>,
-): string {
-  let result = stub;
-  Object.entries(replacements).forEach(([key, value]) => {
-    const regex = new RegExp(`{{\\s*${key}\\s*}}`, "g");
-    result = result.replace(regex, value || "");
-  });
-  result = result.replace(/\n{3,}/g, "\n\n");
-  return result.trim() + "\n";
-}
+};

@@ -3,32 +3,36 @@ export interface DraftJsonConfig {
   makeMigration?: boolean;
 }
 
-export type RelationType =
-  | "belongsTo"
-  | "hasOne"
-  | "hasMany"
-  | "belongsToMany"
-  | "hasOneThrough"
-  | "hasManyThrough"
-  | "morphOne"
-  | "morphMany"
-  | "morphTo"
-  | "morphToMany"
-  | "morphedByMany";
+export const relationTypes = [
+  "belongsTo",
+  "hasOne",
+  "hasMany",
+  "belongsToMany",
+  "hasOneThrough",
+  "hasManyThrough",
+  "morphOne",
+  "morphMany",
+  "morphTo",
+  "morphToMany",
+  "morphedByMany",
+] as const;
+export type RelationType = (typeof relationTypes)[number];
 
-export type FieldType =
-  | "string"
-  | "integer"
-  | "boolean"
-  | "text"
-  | "float"
-  | "date"
-  | "datetime"
-  | "enum"
-  | "uuid"
-  | "ulid"
-  | "softDeletes"
-  | "softDeletesTz";
+export const fieldTypes = [
+  "string",
+  "integer",
+  "boolean",
+  "text",
+  "float",
+  "date",
+  "datetime",
+  "enum",
+  "uuid",
+  "ulid",
+  "softDeletes",
+  "softDeletesTz",
+] as const;
+export type FieldType = (typeof fieldTypes)[number];
 
 export interface ModelField {
   name: string;
