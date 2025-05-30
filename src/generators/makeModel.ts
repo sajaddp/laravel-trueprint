@@ -80,6 +80,22 @@ const generateRelations = (fields: ModelField[]): string =>
     })
     .join("\n");
 
+const renderStub = (
+  stub: string,
+  replacements: Record<string, string>,
+): string => {
+  let result = stub;
+  for (const [key, value] of Object.entries(replacements)) {
+    result = result.replaceAll(
+      new RegExp(`{{\\s*${key}\\s*}}`, "g"),
+      value ?? "",
+    );
+  }
+
+  result = result.replaceAll(/\n{3,}/g, "\n\n");
+  return result.trim() + "\n";
+};
+
 export function makeModels(models: ModelDefinition[]) {
   const modelsDir = path.join(process.cwd(), "app", "Models");
 
@@ -203,19 +219,4 @@ export function makeModels(models: ModelDefinition[]) {
     fs.writeFileSync(filePath, phpContent, "utf-8");
     console.log(`Model created: ${filePath}`);
   });
-}
-
-function renderStub(
-  stub: string,
-  replacements: Record<string, string>,
-): string {
-  let result = stub;
-  for (const [key, value] of Object.entries(replacements)) {
-    result = result.replaceAll(
-      new RegExp(`{{\\s*${key}\\s*}}`, "g"),
-      value ?? "",
-    );
-  }
-  result = result.replaceAll(/\n{3,}/g, "\n\n");
-  return result.trim() + "\n";
 }
