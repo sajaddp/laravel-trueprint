@@ -9,7 +9,12 @@ export type RelationType =
   | "hasMany"
   | "belongsToMany"
   | "hasOneThrough"
-  | "hasManyThrough";
+  | "hasManyThrough"
+  | "morphOne"
+  | "morphMany"
+  | "morphTo"
+  | "morphToMany"
+  | "morphedByMany";
 
 export type FieldType =
   | "string"
