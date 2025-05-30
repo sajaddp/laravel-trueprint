@@ -2,10 +2,25 @@ import fs from "fs";
 import path from "path";
 import { Field, FieldType, ModelDefinition } from "../types";
 
-export function parseDraft(): ModelDefinition[] {
+export interface DraftJsonConfig {
+  makeModel?: boolean;
+  makeMigration?: boolean;
+}
+
+export interface DraftJson {
+  config?: DraftJsonConfig;
+  models: any[];
+}
+
+export const parseDraftJson = (): DraftJson => {
   const filePath = path.join(process.cwd(), "draft.json");
   const raw = fs.readFileSync(filePath, "utf-8");
-  const json = JSON.parse(raw);
+
+  return JSON.parse(raw) as DraftJson;
+};
+
+export function parseDraft(): ModelDefinition[] {
+  const json = parseDraftJson();
 
   if (!Array.isArray(json.models)) {
     throw new Error("Invalid draft.json format: expected models[]");
