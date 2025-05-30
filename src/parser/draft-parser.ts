@@ -3,7 +3,7 @@ import path from "path";
 import { Field, FieldType, ModelDefinition } from "../types";
 
 export function parseDraft(): ModelDefinition[] {
-  const filePath = path.join(__dirname, "..", "draft.json");
+  const filePath = path.join(process.cwd(), "draft.json");
   const raw = fs.readFileSync(filePath, "utf-8");
   const json = JSON.parse(raw);
 
