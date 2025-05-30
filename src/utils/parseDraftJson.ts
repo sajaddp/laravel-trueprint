@@ -1,38 +1,35 @@
-import fs from "fs";
-import path from "path";
+import { readFileSync, existsSync } from "fs";
+import { join } from "path";
 import { DraftJson } from "../types/model";
 
-/**
- * Reads and parses draft.json from project root,
- * returns DraftJson object. Throws on error.
- */
 export function parseDraftJson(): DraftJson {
-  const filePath = path.join(process.cwd(), "draft.json");
+  const filePath = join(process.cwd(), "draft.json");
 
-  if (!fs.existsSync(filePath)) {
+  if (!existsSync(filePath)) {
     throw new Error(`File not found: ${filePath}`);
   }
 
-  const raw = fs.readFileSync(filePath, "utf-8");
   let data: unknown;
-
   try {
+    const raw = readFileSync(filePath, "utf-8");
     data = JSON.parse(raw);
-  } catch (err) {
-    throw new Error(`draft.json is not valid JSON: ${(err as Error).message}`);
+  } catch (error) {
+    throw new Error(
+      `draft.json is not valid JSON: ${(error as Error).message}`,
+    );
   }
 
-  // Check if data is "somewhat" structurally valid
-  if (
-    !data ||
-    typeof data !== "object" ||
-    !("models" in data) ||
-    !Array.isArray((data as any).models)
-  ) {
+  if (!isDraftJson(data)) {
     throw new Error(`draft.json is missing required 'models' array.`);
   }
 
-  // You can add further (strict) validation later as needed
+  return data;
+}
 
-  return data as DraftJson;
+function isDraftJson(data: unknown): data is DraftJson {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    Array.isArray((data as DraftJson).models)
+  );
 }
