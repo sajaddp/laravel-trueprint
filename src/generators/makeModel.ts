@@ -36,17 +36,31 @@ function generateRelations(fields: ModelField[]): string {
     .map((f) => {
       let methodBody = "";
       switch (f.relation) {
-        case "belongsTo":
-          methodBody = `return \$this->belongsTo(${f.model}::class);`;
-          break;
         case "hasOne":
-          methodBody = `return \$this->hasOne(${f.model}::class);`;
+          methodBody = `return $this->hasOne(${f.model}::class);`;
           break;
         case "hasMany":
-          methodBody = `return \$this->hasMany(${f.model}::class);`;
+          methodBody = `return $this->hasMany(${f.model}::class);`;
           break;
         case "belongsToMany":
-          methodBody = `return \$this->belongsToMany(${f.model}::class);`;
+          methodBody = `return $this->belongsToMany(${f.model}::class);`;
+          break;
+        case "belongsTo":
+          methodBody = `return $this->belongsTo(${f.model}::class);`;
+          break;
+        case "hasOneThrough":
+          if (!f.through)
+            throw new Error(
+              `'through' is required for hasOneThrough relation ${f.name}`,
+            );
+          methodBody = `return $this->hasOneThrough(${f.model}::class, ${f.through}::class);`;
+          break;
+        case "hasManyThrough":
+          if (!f.through)
+            throw new Error(
+              `'through' is required for hasManyThrough relation ${f.name}`,
+            );
+          methodBody = `return $this->hasManyThrough(${f.model}::class, ${f.through}::class);`;
           break;
         default:
           methodBody = "// Unknown relation";
