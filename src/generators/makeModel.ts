@@ -38,7 +38,7 @@ function getMorphName(fieldName: string): string {
 
 function generateRelations(fields: ModelField[]): string {
   return fields
-    .filter((f) => f.relation && f.model)
+    .filter((f) => f.relation && (f.model || f.relation === "morphTo"))
     .map((f) => {
       let methodBody = "";
       switch (f.relation) {
