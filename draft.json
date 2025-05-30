@@ -1,21 +1,250 @@
 {
   "config": {
     "makeModel": true,
-    "makeMigration": true
+    "makeMigration": false
   },
   "models": [
     {
       "name": "User",
       "fields": [
         {
+          "name": "id",
+          "type": "integer"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
           "name": "email",
           "type": "string",
           "unique": true
         },
         {
+          "name": "password",
+          "type": "string"
+        },
+        {
           "name": "profile",
-          "relation": "belongsTo",
+          "relation": "hasOne",
           "model": "Profile"
+        },
+        {
+          "name": "posts",
+          "relation": "hasMany",
+          "model": "Post"
+        },
+        {
+          "name": "roles",
+          "relation": "belongsToMany",
+          "model": "Role"
+        }
+      ]
+    },
+    {
+      "name": "Profile",
+      "fields": [
+        {
+          "name": "id",
+          "type": "integer"
+        },
+        {
+          "name": "bio",
+          "type": "text",
+          "nullable": true
+        },
+        {
+          "name": "user",
+          "relation": "belongsTo",
+          "model": "User"
+        }
+      ]
+    },
+    {
+      "name": "Post",
+      "fields": [
+        {
+          "name": "id",
+          "type": "integer"
+        },
+        {
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "name": "content",
+          "type": "text"
+        },
+        {
+          "name": "user",
+          "relation": "belongsTo",
+          "model": "User"
+        },
+        {
+          "name": "comments",
+          "relation": "hasMany",
+          "model": "Comment"
+        },
+        {
+          "name": "latestComment",
+          "relation": "hasOne",
+          "model": "Comment"
+        }
+      ]
+    },
+    {
+      "name": "Comment",
+      "fields": [
+        {
+          "name": "id",
+          "type": "integer"
+        },
+        {
+          "name": "body",
+          "type": "text"
+        },
+        {
+          "name": "post",
+          "relation": "belongsTo",
+          "model": "Post"
+        }
+      ]
+    },
+    {
+      "name": "Role",
+      "fields": [
+        {
+          "name": "id",
+          "type": "integer"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "users",
+          "relation": "belongsToMany",
+          "model": "User"
+        }
+      ]
+    },
+    {
+      "name": "Mechanic",
+      "fields": [
+        {
+          "name": "id",
+          "type": "integer"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "carOwner",
+          "relation": "hasOneThrough",
+          "model": "Owner",
+          "through": "Car"
+        }
+      ]
+    },
+    {
+      "name": "Car",
+      "fields": [
+        {
+          "name": "id",
+          "type": "integer"
+        },
+        {
+          "name": "model",
+          "type": "string"
+        },
+        {
+          "name": "mechanic",
+          "relation": "belongsTo",
+          "model": "Mechanic"
+        },
+        {
+          "name": "owner",
+          "relation": "hasOne",
+          "model": "Owner"
+        }
+      ]
+    },
+    {
+      "name": "Owner",
+      "fields": [
+        {
+          "name": "id",
+          "type": "integer"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "car",
+          "relation": "belongsTo",
+          "model": "Car"
+        }
+      ]
+    },
+    {
+      "name": "Application",
+      "fields": [
+        {
+          "name": "id",
+          "type": "integer"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "deployments",
+          "relation": "hasManyThrough",
+          "model": "Deployment",
+          "through": "Environment"
+        }
+      ]
+    },
+    {
+      "name": "Environment",
+      "fields": [
+        {
+          "name": "id",
+          "type": "integer"
+        },
+        {
+          "name": "application",
+          "relation": "belongsTo",
+          "model": "Application"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "deployments",
+          "relation": "hasMany",
+          "model": "Deployment"
+        }
+      ]
+    },
+    {
+      "name": "Deployment",
+      "fields": [
+        {
+          "name": "id",
+          "type": "integer"
+        },
+        {
+          "name": "environment",
+          "relation": "belongsTo",
+          "model": "Environment"
+        },
+        {
+          "name": "commit_hash",
+          "type": "string"
         }
       ]
     }
