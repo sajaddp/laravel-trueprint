@@ -210,10 +210,12 @@ function renderStub(
   replacements: Record<string, string>,
 ): string {
   let result = stub;
-  Object.entries(replacements).forEach(([key, value]) => {
-    const regex = new RegExp(`{{\\s*${key}\\s*}}`, "g");
-    result = result.replace(regex, value || "");
-  });
-  result = result.replace(/\n{3,}/g, "\n\n");
+  for (const [key, value] of Object.entries(replacements)) {
+    result = result.replaceAll(
+      new RegExp(`{{\\s*${key}\\s*}}`, "g"),
+      value ?? "",
+    );
+  }
+  result = result.replaceAll(/\n{3,}/g, "\n\n");
   return result.trim() + "\n";
 }
